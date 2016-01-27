@@ -16,7 +16,7 @@ setup(name='tadc_import_validator',
           'datetime',
       ],
       classifiers=[
-          'Programming Language :: Python'
+          'Programming Language :: Python',
           'Programming Language :: Python :: 2.7',
           'Development Status :: 4 - Beta',
           'Environment :: Other Environment',

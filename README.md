@@ -4,6 +4,21 @@ For use when preparing files for bulk import of requests into TADC.
 
 TADC Import Validator takes a CSV file and validates that each row matches the validation used in TADC. This means that you can iteritavely test that a file is correct before atempting to upload into TADC.
 
+## Installation
+
+You can either install from source or using pip.
+
+```(bash)
+# using pip
+pip install tadc-import-validator
+```
+
+```(bash)
+# from source
+cd tadc-import-validator-tool
+python setup.py install
+```
+
 ## Module
 
 The import validator is created as a module so that you can use it's validation features in other code.
