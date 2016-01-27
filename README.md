@@ -58,6 +58,8 @@ with open(self.csv_file_name) as csvfile:
 
 You can run the validator as a standalone package too The CSV reader code above is basically what we use to do this and this all gets picked up automatically so that you only have to do this:
 
+**Note:** if you have installed using `pip` then you should already have `tadc-import-csv-validator` available to you. 
+
 ```(bash)
 cd TADCImportValidator
 python setup.py install
