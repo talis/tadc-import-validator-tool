@@ -3,10 +3,10 @@ from setuptools import setup, find_packages
 __author__ = 'timhodson'
 
 setup(name='tadc_import_validator',
-      version='0.1',
+      version='0.1.1',
       description='Validates CSV files for use in Talis Aspire Digitised Content data imports',
       url='http://talis.com',
-      author='Tim Hodson',
+      author='Talis Education Ltd',
       author_email='tgh@talis.com',
       license='MIT',
       packages=find_packages(),
