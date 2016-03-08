@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 __author__ = 'timhodson'
 
-log = Logger('validateCSVFile')
+log = Logger('CSVFileValidator')
 
 
 class CSVFileValidator:

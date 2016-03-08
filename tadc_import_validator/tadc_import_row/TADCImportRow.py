@@ -151,7 +151,10 @@ class TADCImportRow:
         :return:
         """
         for idx, letter in enumerate(string.ascii_uppercase):
-            self.add_data_to_column(letter, row[idx])
+            if idx < len(row):
+                self.add_data_to_column(letter, row[idx])
+            else:
+                self.add_data_to_column(letter, '')
 
     def validate(self):
         """
