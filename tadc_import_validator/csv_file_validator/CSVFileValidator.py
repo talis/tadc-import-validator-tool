@@ -64,14 +64,21 @@ class CSVFileValidator:
     def print_error_summary(self):
         error_rows = len(self.error_summary)
         error_count = 0
+        column_error_summary = {}
         if error_rows > 0:
             log.info("Errors were found for the following columns")
             for row, columns in self.error_summary.iteritems():
                 for column in columns:
                     error_count += 1
+                    if column_error_summary.get(column):
+                        column_error_summary[column] += 1
+                    else:
+                        column_error_summary[column] = 1
                     # rows are zero counted so fix with a +1 for humans to read.
                     log.info("Row {} column {} : {}".format(row+1, column, columns[column]))
 
-            log.info("There were {} errors found in {} rows".format(error_count, error_rows))
+            log.info("Summary: There were {} errors found in {} rows".format(error_count, error_rows))
+            for column in column_error_summary:
+                log.info(" - Column {} had {} errors".format(column, column_error_summary[column]))
         else:
             log.info("No errors found. Woohoo!")
