@@ -92,7 +92,7 @@ class TADCImportRow:
             "Y": {"name": "Local URL/Location"},
             "Z": {"name": "Contains incidental artwork",
                   "rule": self.validate_incidental_artwork,
-                  "error": "Must be a value of either 'y' or 'n'"}
+                  "error": "Must be a value of either 'y' or 'n' (case insensitive)"}
         }
 
     def initialise(self):
@@ -297,7 +297,7 @@ class TADCImportRow:
         """
         if val.strip() == '':
             return True
-        elif val not in ['y', 'n']:
+        elif val not in ['y', 'Y', 'n', 'N']:
             self.set_rule_error()
             return False
 
