@@ -14,7 +14,7 @@ class TADCImportRow:
     # Date format expected by this class.
     DATE_FORMAT_REGEX = re.compile(u"\d{4}[/]\d{2}[/]\d{2}")  # e.g. 2015/01/31
     YEAR_FORMAT_REGEX = re.compile(u"\d{4}")  # 4 digits
-    PAGE_NUMBER_REGEX = re.compile(u"^\d+$")  # one or more digits for the WHOLE string.
+    PAGE_NUMBER_REGEX = re.compile(u"^\d+$|[xXvViI]+")  # one or more digits/roman numerals for the WHOLE string.
 
     def __init__(self):
         # the row dictionary while we work on it internally
