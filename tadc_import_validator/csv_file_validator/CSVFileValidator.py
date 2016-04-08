@@ -1,3 +1,4 @@
+import os
 import unicodecsv as csv
 from logbook import Logger
 from ..tadc_import_row import TADCImportRow
@@ -13,18 +14,26 @@ class CSVFileValidator:
     Validates a CSV File presented as a TADC Import data file.
     """
 
-    def __init__(self, csv_file, header_rows=2):
+    def __init__(self, csv_file, header_rows=2, fix_missing=False):
         self.csv_file_name = csv_file
         log.info("Processing File: {}".format(self.csv_file_name))
         self.header_rows = int(header_rows)
         log.info("Expecting {} header rows".format(self.header_rows))
-
+        self.fix_missing = fix_missing
+        self.fixed_filename = None
+        self.fixed_csv_writer = None
+        self.fixed_fp = None
+        if self.fix_missing:
+            log.info("Will fix missing values".format(self.header_rows))
+            self.init_fixed_file()
         self.error_summary = OrderedDict()
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.fixed_fp:
+            self.fixed_fp.close()
         return self
 
     def validate_file(self):
@@ -39,10 +48,13 @@ class CSVFileValidator:
             for row in csvreader:
                 if row_counter >= self.header_rows:
                     try:
-                        tadc_row = TADCImportRow()
+                        tadc_row = TADCImportRow(self.fix_missing)
                         tadc_row.load(row)
                         if tadc_row.is_valid():
                             log.info("row {} is valid".format(row_counter))
+                            if self.fix_missing:
+                                # output the row to a fixed file.
+                                self.write_fixed_file(tadc_row)
                         else:
                             log.error(u"row {} is not valid".format(row_counter))
                             for error in tadc_row.get_errors():
@@ -82,3 +94,13 @@ class CSVFileValidator:
                 log.info(" - Column {} had {} errors".format(column, column_error_summary[column]))
         else:
             log.info("No errors found. Woohoo!")
+
+    def init_fixed_file(self):
+        split_orig_filename = os.path.splitext(self.csv_file_name)
+        new_name = "{}.fixed{}".format(split_orig_filename[0], split_orig_filename[1])
+        self.fixed_filename = os.path.realpath(new_name)
+        self.fixed_fp = open(self.fixed_filename, 'a')
+        self.fixed_csv_writer = csv.writer(self.fixed_fp, delimiter=',', dialect='excel', quotechar='"')
+
+    def write_fixed_file(self, row):
+        self.fixed_csv_writer.writerow(row.output_for_csv())
