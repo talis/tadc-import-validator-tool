@@ -14,9 +14,10 @@ class TADCImportRow:
     # Date format expected by this class.
     DATE_FORMAT_REGEX = re.compile(u"\d{4}[/]\d{2}[/]\d{2}")  # e.g. 2015/01/31
     YEAR_FORMAT_REGEX = re.compile(u"\d{4}")  # 4 digits
-    PAGE_NUMBER_REGEX = re.compile(u"^\d+$")  # one or more digits for the WHOLE string.
+    PAGE_NUMBER_REGEX = re.compile(u"^\d+$|[xXvViI]+")  # one or more digits/roman numerals for the WHOLE string.
 
-    def __init__(self):
+    def __init__(self, fix_missing=False):
+        self.fix_missing = fix_missing
         # the row dictionary while we work on it internally
         self._row = {}
         # a list of errors when validating
@@ -39,10 +40,10 @@ class TADCImportRow:
                   "error": "Missing mandatory field"},
             "D": {"name": "Request start date", "kev": "rfe_sdate", "kevParser": "kevDate",
                   "rule": self.validate_date,
-                  "error": "Missing mandatory date field, or field is incorrectly formatted"},
+                  "error": "Missing mandatory date field, or field is incorrectly formatted. Should be YYYY/MM/DD"},
             "E": {"name": "Request end date", "kev": "rfe_edate", "kevParser": "kevDate",
                   "rule": self.validate_date,
-                  "error": "Missing mandatory date field, or field is incorrectly formatted"},
+                  "error": "Missing mandatory date field, or field is incorrectly formatted. Should be YYYY/MM/DD"},
             "F": {"name": "Requester Name", "kev": "req_name",
                   "rule": self.validate_mandatory,
                   "error": "Missing mandatory field"},
@@ -57,7 +58,7 @@ class TADCImportRow:
             "J": {"name": "DOI", "kev": "rft_doi", "kevParser": "kevDOI"},
             "K": {"name": "Title of Book/Journal",
                   "rule": self.validate_mandatory,
-                  "error": "Missing mandatory field"},
+                  "error": "Missing mandatory field", "fix_value": "Unknown title"},
             "L": {"name": "Author of Book"},
             "M": {"name": "Journal Year",
                   "rule": self.validate_journal_year,
@@ -71,10 +72,10 @@ class TADCImportRow:
                   "error": "Missing mandatory field"},
             "Q": {"name": "Author of Extract",
                   "rule": self.validate_author_of_extract,
-                  "error": "Missing mandatory field"},
+                  "error": "Missing mandatory field", "fix_value": "Unknown author"},
             "R": {"name": "Publisher",
                   "rule": self.validate_publisher_name,
-                  "error": "Missing mandatory field"},
+                  "error": "Missing mandatory field", "fix_value": "Unknown publisher"},
             "S": {"name": "Place of publication"},
             "T": {"name": "Page No. From", "kev": "rft_spage",
                   "rule": self.validate_page_number,
@@ -92,7 +93,7 @@ class TADCImportRow:
             "Y": {"name": "Local URL/Location"},
             "Z": {"name": "Contains incidental artwork",
                   "rule": self.validate_incidental_artwork,
-                  "error": "Must be a value of either 'y' or 'n'"}
+                  "error": "Must be a value of either 'y' or 'n' (case insensitive)"}
         }
 
     def initialise(self):
@@ -105,7 +106,7 @@ class TADCImportRow:
 
     def output_for_csv(self):
         """
-        Build a list object redy to be written to a CSV file.
+        Build a list object ready to be written to a CSV file.
         :return:
         """
         output = []
@@ -225,6 +226,9 @@ class TADCImportRow:
         """
         if self._row['H']['value'].lower() in ['a', 'article', 'c', 'chapter']:
             if val.strip() == '':
+                if self.fix_missing:
+                    self.fix()
+                    return True
                 self.set_rule_error()
                 return False
             return True
@@ -237,6 +241,9 @@ class TADCImportRow:
         """
         if self._row['H']['value'].lower() in ['a', 'article']:
             if val.strip() == '':
+                if self.fix_missing:
+                    self.fix()
+                    return True
                 self.set_rule_error()
                 return False
             return True
@@ -254,6 +261,9 @@ class TADCImportRow:
             return True
 
         if val.strip() == '':
+            if self.fix_missing:
+                self.fix()
+                return True
             self.set_rule_error()
             return False
 
@@ -297,7 +307,7 @@ class TADCImportRow:
         """
         if val.strip() == '':
             return True
-        elif val not in ['y', 'n']:
+        elif val not in ['y', 'Y', 'n', 'N']:
             self.set_rule_error()
             return False
 
@@ -318,6 +328,12 @@ class TADCImportRow:
 
     def get_errors(self):
         return self._errors
+
+    def fix(self):
+        """
+        Fix the current row value with the fix value from the rules.
+        """
+        self._row[self._current_column]['value'] = self.validationRules[self._current_column]['fix_value']
 
     def is_valid(self):
         """
