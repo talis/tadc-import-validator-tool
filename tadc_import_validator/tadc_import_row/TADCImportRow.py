@@ -1,5 +1,6 @@
 import string
 import re
+from datetime import datetime
 from logbook import Logger
 
 log = Logger("TADCImportRow")
@@ -14,9 +15,10 @@ class TADCImportRow:
     # Date format expected by this class.
     DATE_FORMAT_REGEX = re.compile(u"\d{4}[/]\d{2}[/]\d{2}")  # e.g. 2015/01/31
     YEAR_FORMAT_REGEX = re.compile(u"\d{4}")  # 4 digits
-    PAGE_NUMBER_REGEX = re.compile(u"^\d+$|[xXvViI]+")  # one or more digits/roman numerals for the WHOLE string.
+    PAGE_NUMBER_REGEX = re.compile(u"^\d+$|[xXvViIcClLmM]+")  # one or more digits/roman numerals for the WHOLE string.
 
-    def __init__(self, fix_missing=False):
+    def __init__(self, old_date_format, fix_missing=False):
+        self.old_date_format = old_date_format
         self.fix_missing = fix_missing
         # the row dictionary while we work on it internally
         self._row = {}
@@ -292,6 +294,9 @@ class TADCImportRow:
             return False
         if re.match(self.DATE_FORMAT_REGEX, val.strip()):
             return True
+        if self.fix_missing:
+            self.fix_date()
+            return True
         self.set_rule_error()
         return False
 
@@ -335,6 +340,15 @@ class TADCImportRow:
         """
         self._row[self._current_column]['value'] = self.validationRules[self._current_column]['fix_value']
 
+    def fix_date(self):
+        """
+        Fix the date so that it is our desired date format
+        """
+        original_date = self._row[self._current_column]['value']
+        original_date_obj = datetime.strptime(original_date, self.old_date_format)
+        new_date = original_date_obj.strftime('%Y/%m/%d')
+        self._row[self._current_column]['value'] = new_date
+
     def is_valid(self):
         """
         Check to see if this row is valid.
@@ -342,7 +356,6 @@ class TADCImportRow:
         """
         self.validate()
         if len(self.get_errors()) > 0:
-            #raise TADCImportRowValidationException("Some values were not valid", self.get_errors())
             return False
         return True
 
